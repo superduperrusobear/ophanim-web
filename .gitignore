@@ -36,7 +36,7 @@ yarn-error.log*
 ehthumbs.db
 Thumbs.db
 
-# Large 3D models and textures
+# Large 3D models and textures - now served from R2
 /public/new/*.glb
 /public/new/*.gltf
 /public/splash/*.glb
