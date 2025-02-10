@@ -55,8 +55,3 @@ Thumbs.db
 .env*
 !.env.example 
 .vercel
-
-# Large binary files
-*.bin
-public/new/ophanim.bin
-public/splash/untitled.bin
