@@ -1,0 +1,53 @@
+{
+  "name": "ophanim-viewer",
+  "version": "0.1.0",
+  "private": true,
+  "homepage": "https://superduperrusobear.github.io/OPHN",
+  "dependencies": {
+    "@react-three/drei": "^9.97.0",
+    "@react-three/fiber": "^8.15.16",
+    "@react-three/postprocessing": "^2.19.1",
+    "@solana/wallet-adapter-base": "^0.9.23",
+    "@solana/wallet-adapter-phantom": "^0.9.24",
+    "@solana/wallet-adapter-react": "^0.15.35",
+    "@solana/wallet-adapter-react-ui": "^0.9.35",
+    "@solana/web3.js": "^1.98.0",
+    "@types/three": "^0.160.0",
+    "axios": "^1.7.9",
+    "firebase": "^10.14.1",
+    "framer-motion": "^11.18.2",
+    "lil-gui": "^0.19.2",
+    "postprocessing": "^6.36.6",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "styled-components": "^6.1.15",
+    "three": "^0.160.0",
+    "vanta": "^0.5.24"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
+  },
+  "devDependencies": {
+    "fs-extra": "^11.3.0",
+    "gh-pages": "^6.3.0",
+    "gltf-pipeline": "^4.1.0",
+    "react-scripts": "5.0.1"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
