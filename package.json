@@ -2,7 +2,6 @@
   "name": "ophanim-viewer",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://ophanim.xyz",
   "dependencies": {
     "@react-three/drei": "^9.97.0",
     "@react-three/fiber": "^8.15.16",
@@ -16,7 +15,6 @@
     "axios": "^1.7.9",
     "firebase": "^10.14.1",
     "framer-motion": "^11.18.2",
-    "lil-gui": "^0.19.2",
     "postprocessing": "^6.36.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -28,14 +26,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "eject": "react-scripts eject"
   },
   "devDependencies": {
-    "fs-extra": "^11.3.0",
-    "gh-pages": "^6.3.0",
-    "gltf-pipeline": "^4.1.0",
     "react-scripts": "5.0.1"
   },
   "browserslist": {

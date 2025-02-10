@@ -36,6 +36,13 @@ yarn-error.log*
 ehthumbs.db
 Thumbs.db
 
+# Large 3D models and textures
+/public/new/*.glb
+/public/new/*.gltf
+/public/splash/*.glb
+/public/splash/*.gltf
+/public/new/*.webp
+
 # Optional npm cache directory
 .npm
 
@@ -54,4 +61,3 @@ Thumbs.db
 # dotenv environment variable files
 .env*
 !.env.example 
-.vercel

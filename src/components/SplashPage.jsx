@@ -106,7 +106,7 @@ export function SplashPage({ onEnter }) {
             fontSize: '1.3rem',
             background: 'rgba(255, 215, 0, 0.1)',
             border: '2px solid rgba(255, 215, 0, 0.3)',
-            borderRadius: '0',
+            borderRadius: '50px',
             color: '#ffd700',
             cursor: 'pointer',
             transition: 'all 0.3s ease',

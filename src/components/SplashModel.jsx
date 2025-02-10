@@ -1,48 +1,26 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { useGLTF, useAnimations, Html } from '@react-three/drei';
+import React, { useEffect, useRef } from 'react';
+import { useGLTF, useAnimations } from '@react-three/drei';
 import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
-const WORKER_URL = 'https://cdn.ophanim.xyz';
+// Model URLs - Update with your Cloudflare R2 bucket URL
+const R2_BASE_URL = process.env.REACT_APP_R2_URL || 'https://pub-[your-bucket-hash].r2.dev';
 
-// Error display component
-function ErrorMessage({ error }) {
-  return (
-    <Html center>
-      <div style={{
-        background: 'rgba(0,0,0,0.8)',
-        color: 'white',
-        padding: '20px',
-        borderRadius: '8px',
-        maxWidth: '300px',
-        textAlign: 'center'
-      }}>
-        <h3>Error Loading Model</h3>
-        <p>{error}</p>
-      </div>
-    </Html>
-  );
-}
+const MODEL_URLS = {
+  model: `${R2_BASE_URL}/splash/untitled.gltf`,
+  textures: {
+    'EyeBase': `${R2_BASE_URL}/new/EyeBaseTexture.webp`,
+    'EyeMetallic': `${R2_BASE_URL}/new/EyeMetallicTexture_png-EyeRoughnessTexture.webp`,
+    'EyeNormal': `${R2_BASE_URL}/new/EyeNormalMap.webp`,
+    'RingsBase': `${R2_BASE_URL}/new/RingsBaseTexture.webp`,
+    'RingsMetallic': `${R2_BASE_URL}/new/RingsMetallicTexture-RingsRoughnessTexture.webp`,
+    'RingsNormal': `${R2_BASE_URL}/new/RingsNormalMap.webp`
+  }
+};
 
 export function SplashModel() {
-  const [error, setError] = useState(null);
-  const [model, setModel] = useState(null);
-  
-  // Load model with error handling
-  useEffect(() => {
-    const loadModel = async () => {
-      try {
-        const gltf = await useGLTF.load(`${WORKER_URL}/models/untitled.gltf`);
-        setModel(gltf);
-      } catch (err) {
-        console.error('Model loading error:', err);
-        setError(err.message);
-      }
-    };
-    loadModel();
-  }, []);
-
-  const { actions, names } = useAnimations(model?.animations, model?.scene);
+  const gltf = useGLTF(MODEL_URLS.model);
+  const { actions, names } = useAnimations(gltf.animations, gltf.scene);
   const modelRef = useRef();
   const sunLightRef = useRef();
   const { scene, camera } = useThree();
@@ -69,21 +47,14 @@ export function SplashModel() {
   });
 
   useEffect(() => {
-    if (!model?.scene) {
-      console.error('No model scene available');
-      return;
-    }
-
     // Simply play all animations
-    if (names && actions) {
-      names.forEach((name) => {
-        const action = actions[name];
-        if (action) {
-          action.timeScale = 0.09;
-          action.play();
-        }
-      });
-    }
+    names.forEach((name) => {
+      const action = actions[name];
+      if (action) {
+        action.timeScale = 0.09;
+        action.play();
+      }
+    });
 
     // Set initial camera position
     camera.position.copy(baseCameraPos.current.position);
@@ -96,59 +67,65 @@ export function SplashModel() {
 
     // Load and apply textures
     const textureLoader = new THREE.TextureLoader();
-    const textureMap = {
-      'Image_0': `${WORKER_URL}/models/Image_0.webp`,
-      'Image_1': `${WORKER_URL}/models/Image_1.webp`,
-      'diffuse': `${WORKER_URL}/models/ae81caf0b4cc4839a7d363edb6fdfa01_RGB_diffuse.webp`,
-      'roughness': `${WORKER_URL}/models/5370089b2700446599003adc038a92c5_R_05___Default_roughness.webp`,
-      'model': `${WORKER_URL}/models/44959d755a60403fbebe8476dbaa5a1e_RGB_model.webp`,
-      'albedo': `${WORKER_URL}/models/c6058a487230442ca07220c5b0502207_RGB_05___Default_albedo.webp`
-    };
 
     // Apply textures to materials
-    model.scene.traverse((node) => {
-      if (node.isMesh && node.material) {
-        Object.entries(textureMap).forEach(([key, url]) => {
-          const texture = textureLoader.load(url, 
-            undefined, 
-            undefined, 
-            (error) => console.error(`Error loading texture ${key}:`, error)
-          );
-          texture.flipY = false;
-          
-          if (node.name.toLowerCase().includes(key.toLowerCase())) {
-            node.material.map = texture;
+    gltf.scene.traverse((node) => {
+      if (node.isMesh) {
+        if (node.material) {
+          // For rings
+          if (node.name.toLowerCase().includes('ring')) {
+            const baseTexture = textureLoader.load(MODEL_URLS.textures.RingsBase);
+            const metallicTexture = textureLoader.load(MODEL_URLS.textures.RingsMetallic);
+            const normalTexture = textureLoader.load(MODEL_URLS.textures.RingsNormal);
+            
+            baseTexture.flipY = false;
+            metallicTexture.flipY = false;
+            normalTexture.flipY = false;
+
+            node.material.map = baseTexture;
+            node.material.metalnessMap = metallicTexture;
+            node.material.normalMap = normalTexture;
+            node.material.metalness = 0;
+            node.material.roughness = 1;
             node.material.needsUpdate = true;
           }
-        });
+          // For eye
+          else if (node.name.toLowerCase().includes('eye')) {
+            const baseTexture = textureLoader.load(MODEL_URLS.textures.EyeBase);
+            const metallicTexture = textureLoader.load(MODEL_URLS.textures.EyeMetallic);
+            const normalTexture = textureLoader.load(MODEL_URLS.textures.EyeNormal);
+            
+            baseTexture.flipY = false;
+            metallicTexture.flipY = false;
+            normalTexture.flipY = false;
+
+            node.material.map = baseTexture;
+            node.material.metalnessMap = metallicTexture;
+            node.material.normalMap = normalTexture;
+            node.material.needsUpdate = true;
+          }
+
+          // Set material properties
+          node.material.envMapIntensity = 1;
+          node.material.needsUpdate = true;
+        }
       }
     });
 
-    // Initial model settings
-    if (modelRef.current) {
-      modelRef.current.position.set(5.7, -15.2, -10);
-      modelRef.current.scale.setScalar(1);
-    }
+    if (!modelRef.current) return;
+
+    // Set initial model position
+    modelRef.current.position.set(5.7, -15.2, -10);
 
     return () => {
-      if (names && actions) {
-        names.forEach((name) => {
-          const action = actions[name];
-          if (action) {
-            action.stop();
-          }
-        });
-      }
+      names.forEach((name) => {
+        const action = actions[name];
+        if (action) {
+          action.stop();
+        }
+      });
     };
-  }, [model, camera, scene, actions, names]);
-
-  if (error) {
-    return <ErrorMessage error={error} />;
-  }
-
-  if (!model?.scene) {
-    return null;
-  }
+  }, [camera, gltf.scene, scene, actions, names]);
 
   return (
     <>
@@ -158,6 +135,8 @@ export function SplashModel() {
         position={[50, 50, 50]}
         intensity={1.5}
         castShadow
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
       >
         <orthographicCamera attach="shadow-camera" args={[-10, 10, 10, -10]} />
       </directionalLight>
@@ -165,11 +144,11 @@ export function SplashModel() {
       <ambientLight intensity={0.3} />
       <primitive
         ref={modelRef}
-        object={model.scene}
+        object={gltf.scene}
         dispose={null}
       />
     </>
   );
 }
 
-useGLTF.preload(`${WORKER_URL}/models/untitled.gltf`); 
+useGLTF.preload('/splash/untitled.gltf'); 

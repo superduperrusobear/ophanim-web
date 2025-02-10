@@ -1,80 +1,174 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { useGLTF, useAnimations, Html } from '@react-three/drei';
-import { useThree } from '@react-three/fiber';
+import React, { useEffect, useRef } from 'react';
+import { useGLTF, useAnimations, PerspectiveCamera, OrbitControls } from '@react-three/drei';
+import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
-const WORKER_URL = 'https://cdn.ophanim.xyz';
+// Model URLs - Update with your Cloudflare R2 bucket URL
+const R2_BASE_URL = process.env.REACT_APP_R2_URL || 'https://pub-[your-bucket-hash].r2.dev';
 
-// Error display component
-function ErrorMessage({ error }) {
+const MODEL_URLS = {
+  model: `${R2_BASE_URL}/new/ophanim.glb`,
+  textures: {
+    'EyeBase': `${R2_BASE_URL}/new/EyeBaseTexture.webp`,
+    'EyeMetallic': `${R2_BASE_URL}/new/EyeMetallicTexture_png-EyeRoughnessTexture.webp`,
+    'EyeNormal': `${R2_BASE_URL}/new/EyeNormalMap.webp`,
+    'RingsBase': `${R2_BASE_URL}/new/RingsBaseTexture.webp`,
+    'RingsMetallic': `${R2_BASE_URL}/new/RingsMetallicTexture-RingsRoughnessTexture.webp`,
+    'RingsNormal': `${R2_BASE_URL}/new/RingsNormalMap.webp`
+  }
+};
+
+// Separate component for UI overlay
+export function UIOverlay() {
+  const glyphPositions = [
+    { top: '15%', left: '8%' },  // Telegram - moved slightly for larger size
+    { top: '15%', right: '8%' }, // X/Twitter
+    { top: '50%', left: '3%' },   // Layer 1
+    { top: '50%', right: '3%' },  // Screenshot
+    { bottom: '15%', left: '8%' }, // Market Activity
+    { bottom: '15%', right: '8%' } // Fehu Rune
+  ];
+
+  const buttonStyle = {
+    position: 'absolute',
+    background: 'none',
+    border: 'none',
+    padding: 0,
+    cursor: 'pointer',
+    width: '120px',  // Increased from 80px
+    height: '120px', // Increased from 80px
+    transition: 'all 0.3s ease',
+    animation: 'breathe 4s ease-in-out infinite'
+  };
+
+  const imgStyle = {
+    width: '100%',
+    height: '100%',
+    objectFit: 'contain',
+    filter: 'drop-shadow(0 0 15px rgba(255, 255, 255, 0.4))' // Increased glow effect
+  };
+
+  const containerStyle = {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    pointerEvents: 'none',
+    zIndex: 1000
+  };
+
+  // Add the breathing animation keyframes
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = `
+    @keyframes breathe {
+      0% {
+        transform: scale(1);
+        opacity: 0.8;
+        filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.3));
+      }
+      50% {
+        transform: scale(1.15);
+        opacity: 1;
+        filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.5));
+      }
+      100% {
+        transform: scale(1);
+        opacity: 0.8;
+        filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.3));
+      }
+    }
+  `;
+  document.head.appendChild(styleSheet);
+
   return (
-    <Html center>
-      <div style={{
-        background: 'rgba(0,0,0,0.8)',
-        color: 'white',
-        padding: '20px',
-        borderRadius: '8px',
-        maxWidth: '300px',
-        textAlign: 'center'
-      }}>
-        <h3>Error Loading Model</h3>
-        <p>{error}</p>
-      </div>
-    </Html>
+    <div style={containerStyle}>
+      {[
+        {
+          src: "/imgs/Telegram-icon-with-black-color-on-transparent-background-PNG.png",
+          alt: "Telegram",
+          onClick: () => console.log('Telegram clicked')
+        },
+        {
+          src: "/imgs/large-x-logo.png.twimg_.1920-e1699539508422.png",
+          alt: "X/Twitter",
+          onClick: () => console.log('X/Twitter clicked')
+        },
+        {
+          src: "/imgs/Layer 1.png",
+          alt: "Layer 1",
+          onClick: () => console.log('Layer 1 clicked')
+        },
+        {
+          src: "/imgs/Screenshot 2025-02-05 at 14-13-15 10535I_large.gif (GIF Image 250 × 159 pixels) copy 2.png",
+          alt: "Screenshot",
+          onClick: () => console.log('Screenshot clicked')
+        },
+        {
+          src: "/imgs/market-activity.png",
+          alt: "Market Activity",
+          onClick: () => console.log('Market Activity clicked')
+        },
+        {
+          src: "/imgs/Fehu-Elder-Futhark-Rune-1.png",
+          alt: "Fehu Rune",
+          onClick: () => console.log('Fehu Rune clicked')
+        }
+      ].map((glyph, index) => (
+        <button
+          key={glyph.alt}
+          style={{
+            ...buttonStyle,
+            ...glyphPositions[index],
+            pointerEvents: 'auto',
+            animationDelay: `${index * 0.5}s` // Stagger the breathing animation
+          }}
+          onClick={glyph.onClick}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'scale(1.2)';
+            e.currentTarget.style.filter = 'brightness(1.2)';
+            e.currentTarget.style.animationPlayState = 'paused';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.filter = 'brightness(1)';
+            e.currentTarget.style.animationPlayState = 'running';
+          }}
+        >
+          <img
+            src={glyph.src}
+            alt={glyph.alt}
+            style={imgStyle}
+          />
+        </button>
+      ))}
+    </div>
   );
 }
 
 // Main 3D scene component
 export function OphanimModel() {
-  const [error, setError] = useState(null);
-  const [model, setModel] = useState(null);
-  
-  // Load model with error handling
-  useEffect(() => {
-    const loadModel = async () => {
-      try {
-        const gltf = await useGLTF.load(`${WORKER_URL}/models/ophanim.glb`);
-        setModel(gltf);
-      } catch (err) {
-        console.error('Model loading error:', err);
-        setError(err.message);
-      }
-    };
-    loadModel();
-  }, []);
-
-  const { actions, names } = useAnimations(model?.animations, model?.scene);
+  const gltf = useGLTF(MODEL_URLS.model);
+  const { actions, names } = useAnimations(gltf.animations, gltf.scene);
   const groupRef = useRef();
   const { scene, camera } = useThree();
   const lightRef = useRef();
 
   useEffect(() => {
-    if (!model?.scene) {
-      console.error('No model scene available');
-      return;
-    }
-
     // Set scene background
     scene.background = new THREE.Color('#000000');
 
     // Load and apply textures
     const textureLoader = new THREE.TextureLoader();
-    const textureMap = {
-      'EyeBase': `${WORKER_URL}/models/EyeBaseTexture.webp`,
-      'EyeMetallic': `${WORKER_URL}/models/EyeMetallicTexture_png-EyeRoughnessTexture.webp`,
-      'EyeNormal': `${WORKER_URL}/models/EyeNormalMap.webp`,
-      'RingsBase': `${WORKER_URL}/models/RingsBaseTexture.webp`,
-      'RingsMetallic': `${WORKER_URL}/models/RingsMetallicTexture-RingsRoughnessTexture.webp`,
-      'RingsNormal': `${WORKER_URL}/models/RingsNormalMap.webp`
-    };
+    const textureMap = MODEL_URLS.textures;
 
     // Enhanced debug logging
-    console.log('Model loaded:', model);
+    console.log('Model loaded:', gltf);
     console.log('Scene:', scene);
     console.log('Camera:', camera);
     
     // Log all meshes and their positions
-    model.scene.traverse((node) => {
+    gltf.scene.traverse((node) => {
       if (node.isMesh) {
         console.log('Mesh:', node.name, 'Position:', node.position);
         // Apply textures based on mesh name
@@ -120,19 +214,6 @@ export function OphanimModel() {
       }
     });
 
-    // Calculate bounding box to center model
-    const box = new THREE.Box3().setFromObject(model.scene);
-    const center = box.getCenter(new THREE.Vector3());
-    const size = box.getSize(new THREE.Vector3());
-    
-    console.log('Model bounds:', { center, size });
-
-    // Initial model settings
-    if (groupRef.current) {
-      groupRef.current.position.set(5.7, -15.2, -10);
-      groupRef.current.scale.setScalar(1);
-    }
-
     // Set initial camera position
     camera.position.set(-366.27, 58.40, -539.69);
     camera.lookAt(0, 0, 0);
@@ -140,57 +221,48 @@ export function OphanimModel() {
     camera.updateProjectionMatrix();
 
     // Play animations
-    if (names && actions) {
+    names.forEach((name) => {
+      const action = actions[name];
+      if (action) {
+        action.reset().play();
+        action.timeScale = 0.556;
+        action.setLoop(THREE.LoopRepeat, Infinity);
+      }
+    });
+
+    return () => {
+      // Cleanup
       names.forEach((name) => {
         const action = actions[name];
         if (action) {
-          action.reset().play();
-          action.timeScale = 0.09;
-          action.setLoop(THREE.LoopRepeat, Infinity);
+          action.stop();
         }
       });
-    }
-
-    return () => {
-      if (names && actions) {
-        names.forEach((name) => {
-          const action = actions[name];
-          if (action) {
-            action.stop();
-          }
-        });
-      }
     };
-  }, [model, scene, camera, actions, names]);
-
-  if (error) {
-    return <ErrorMessage error={error} />;
-  }
-
-  if (!model?.scene) {
-    return null;
-  }
+  }, [gltf.scene, scene, camera]);
 
   return (
     <>
-      {/* Sun directional light */}
+      {/* Lights */}
+      <ambientLight intensity={1} />
       <directionalLight
         ref={lightRef}
-        position={[50, 50, 50]}
-        intensity={1.5}
+        position={[10, 10, 10]}
+        intensity={2}
         castShadow
-      >
-        <orthographicCamera attach="shadow-camera" args={[-10, 10, 10, -10]} />
-      </directionalLight>
-      {/* Ambient light for overall scene brightness */}
-      <ambientLight intensity={0.3} />
-      <primitive
-        ref={groupRef}
-        object={model.scene}
-        dispose={null}
       />
+      <pointLight position={[-10, -10, -10]} intensity={1} />
+      
+      {/* Model */}
+      <group ref={groupRef}>
+        <primitive object={gltf.scene} />
+      </group>
     </>
   );
 }
 
-useGLTF.preload(`${WORKER_URL}/models/ophanim.glb`);
+// Preload the model
+useGLTF.preload('/new/ophanim.glb');
+
+// Export only the OphanimModel
+export default OphanimModel;
