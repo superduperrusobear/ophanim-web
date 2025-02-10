@@ -3,8 +3,10 @@ import { useGLTF, useAnimations } from '@react-three/drei';
 import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
+const R2_BASE_URL = 'https://6d7d021df00cb8d436f2a8e219bdfd2b.r2.cloudflarestorage.com/ophnm/models';
+
 export function SplashModel() {
-  const gltf = useGLTF('/splash/untitled.gltf');
+  const gltf = useGLTF(`${R2_BASE_URL}/untitled.gltf`);
   const { actions, names } = useAnimations(gltf.animations, gltf.scene);
   const modelRef = useRef();
   const sunLightRef = useRef();
@@ -143,4 +145,4 @@ export function SplashModel() {
   );
 }
 
-useGLTF.preload('/splash/untitled.gltf'); 
+useGLTF.preload(`${R2_BASE_URL}/untitled.gltf`); 

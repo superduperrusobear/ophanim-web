@@ -3,9 +3,11 @@ import { useGLTF, useAnimations, PerspectiveCamera, OrbitControls } from '@react
 import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
+const R2_BASE_URL = 'https://6d7d021df00cb8d436f2a8e219bdfd2b.r2.cloudflarestorage.com/ophnm/models';
+
 // Main 3D scene component
 export function OphanimModel() {
-  const gltf = useGLTF('/new/ophanim.glb');
+  const gltf = useGLTF(`${R2_BASE_URL}/ophanim.glb`);
   const { actions, names } = useAnimations(gltf.animations, gltf.scene);
   const groupRef = useRef();
   const { scene, camera } = useThree();
@@ -139,4 +141,4 @@ export function OphanimModel() {
   );
 }
 
-useGLTF.preload('/new/ophanim.glb');
+useGLTF.preload(`${R2_BASE_URL}/ophanim.glb`);
