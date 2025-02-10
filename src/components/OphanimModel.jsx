@@ -1,19 +1,56 @@
-import React, { useEffect, useRef } from 'react';
-import { useGLTF, useAnimations, PerspectiveCamera, OrbitControls } from '@react-three/drei';
+import React, { useEffect, useRef, useState } from 'react';
+import { useGLTF, useAnimations, PerspectiveCamera, OrbitControls, Html } from '@react-three/drei';
 import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 const WORKER_URL = 'https://ophnm-cors.ophanimsol.workers.dev';
 
+// Error display component
+function ErrorMessage({ error }) {
+  return (
+    <Html center>
+      <div style={{
+        background: 'rgba(0,0,0,0.8)',
+        color: 'white',
+        padding: '20px',
+        borderRadius: '8px',
+        maxWidth: '300px',
+        textAlign: 'center'
+      }}>
+        <h3>Error Loading Model</h3>
+        <p>{error}</p>
+      </div>
+    </Html>
+  );
+}
+
 // Main 3D scene component
 export function OphanimModel() {
-  const gltf = useGLTF(`${WORKER_URL}/models/ophanim.glb`);
-  const { actions, names } = useAnimations(gltf.animations, gltf.scene);
+  const [error, setError] = useState(null);
+  
+  // Load model with error handling
+  let gltf;
+  try {
+    gltf = useGLTF(`${WORKER_URL}/models/ophanim.glb`, undefined, (error) => {
+      console.error('Model loading error:', error);
+      setError(error.message);
+    });
+  } catch (err) {
+    console.error('Model loading error:', err);
+    setError(err.message);
+  }
+
+  const { actions, names } = useAnimations(gltf?.animations, gltf?.scene);
   const groupRef = useRef();
   const { scene, camera } = useThree();
   const lightRef = useRef();
 
   useEffect(() => {
+    if (!gltf?.scene) {
+      console.error('No model scene available');
+      return;
+    }
+
     // Set scene background
     scene.background = new THREE.Color('#000000');
 
@@ -117,7 +154,15 @@ export function OphanimModel() {
         }
       });
     };
-  }, [gltf.scene, scene, camera, actions, names]);
+  }, [gltf?.scene, scene, camera, actions, names]);
+
+  if (error) {
+    return <ErrorMessage error={error} />;
+  }
+
+  if (!gltf?.scene) {
+    return null;
+  }
 
   return (
     <>
