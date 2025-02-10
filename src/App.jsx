@@ -7,6 +7,8 @@ import { SplashPage } from './components/SplashPage';
 import * as THREE from 'three';
 import { ShaderBackground } from './components/ShaderBackground';
 
+const WORKER_URL = 'https://ophnm-cors.ophanimsol.workers.dev';
+
 function WebGLError() {
   return (
     <div style={{
@@ -132,7 +134,7 @@ function ModelViewer() {
 
 // Audio Component
 function BackgroundMusic() {
-  const [audio] = useState(new Audio('/audio/untitled.mp3'));
+  const [audio] = useState(new Audio(`${WORKER_URL}/audio/untitled.mp3`));
   const [playing, setPlaying] = useState(false);
   const [error, setError] = useState(null);
   const [userInteracted, setUserInteracted] = useState(false);
@@ -168,6 +170,7 @@ function BackgroundMusic() {
     // Set up audio
     audio.volume = 1.0;
     audio.loop = true;
+    audio.crossOrigin = "anonymous";
     
     // Add event listeners for debugging
     audio.addEventListener('loadstart', () => console.log('Audio loading started'));
