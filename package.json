@@ -2,7 +2,7 @@
   "name": "ophanim-viewer",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://superduperrusobear.github.io/OPHN",
+  "homepage": "https://ophanim.xyz",
   "dependencies": {
     "@react-three/drei": "^9.97.0",
     "@react-three/fiber": "^8.15.16",

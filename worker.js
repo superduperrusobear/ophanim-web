@@ -1,10 +1,19 @@
 export default {
   async fetch(request, env) {
+    const allowedOrigins = [
+      'https://superduperrusobear.github.io',
+      'https://ophanim.xyz',
+      'https://www.ophanim.xyz',
+      'http://localhost:3000'
+    ];
+
+    const origin = request.headers.get('Origin');
     const corsHeaders = {
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': allowedOrigins.includes(origin) ? origin : allowedOrigins[0],
       'Access-Control-Allow-Methods': 'GET, HEAD, POST, OPTIONS',
       'Access-Control-Allow-Headers': '*',
       'Access-Control-Max-Age': '86400',
+      'Access-Control-Allow-Credentials': 'true'
     };
 
     // Handle CORS preflight requests
@@ -51,6 +60,16 @@ export default {
           break;
         case 'bin':
           headers.set('Content-Type', 'application/octet-stream');
+          break;
+        case 'webp':
+          headers.set('Content-Type', 'image/webp');
+          break;
+        case 'png':
+          headers.set('Content-Type', 'image/png');
+          break;
+        case 'jpg':
+        case 'jpeg':
+          headers.set('Content-Type', 'image/jpeg');
           break;
       }
 

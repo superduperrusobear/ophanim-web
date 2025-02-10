@@ -7,7 +7,7 @@ import { SplashPage } from './components/SplashPage';
 import * as THREE from 'three';
 import { ShaderBackground } from './components/ShaderBackground';
 
-const WORKER_URL = 'https://ophnm-cors.ophanimsol.workers.dev';
+const WORKER_URL = 'https://cdn.ophanim.xyz';
 
 function WebGLError() {
   return (

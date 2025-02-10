@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useGLTF, useAnimations, PerspectiveCamera, OrbitControls, Html } from '@react-three/drei';
-import { useThree, useFrame } from '@react-three/fiber';
+import { useGLTF, useAnimations, Html } from '@react-three/drei';
+import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
-const WORKER_URL = 'https://ophnm-cors.ophanimsol.workers.dev';
+const WORKER_URL = 'https://cdn.ophanim.xyz';
 
 // Error display component
 function ErrorMessage({ error }) {
@@ -27,26 +27,29 @@ function ErrorMessage({ error }) {
 // Main 3D scene component
 export function OphanimModel() {
   const [error, setError] = useState(null);
+  const [model, setModel] = useState(null);
   
   // Load model with error handling
-  let gltf;
-  try {
-    gltf = useGLTF(`${WORKER_URL}/models/ophanim.glb`, undefined, (error) => {
-      console.error('Model loading error:', error);
-      setError(error.message);
-    });
-  } catch (err) {
-    console.error('Model loading error:', err);
-    setError(err.message);
-  }
+  useEffect(() => {
+    const loadModel = async () => {
+      try {
+        const gltf = await useGLTF.load(`${WORKER_URL}/models/ophanim.glb`);
+        setModel(gltf);
+      } catch (err) {
+        console.error('Model loading error:', err);
+        setError(err.message);
+      }
+    };
+    loadModel();
+  }, []);
 
-  const { actions, names } = useAnimations(gltf?.animations, gltf?.scene);
+  const { actions, names } = useAnimations(model?.animations, model?.scene);
   const groupRef = useRef();
   const { scene, camera } = useThree();
   const lightRef = useRef();
 
   useEffect(() => {
-    if (!gltf?.scene) {
+    if (!model?.scene) {
       console.error('No model scene available');
       return;
     }
@@ -57,21 +60,21 @@ export function OphanimModel() {
     // Load and apply textures
     const textureLoader = new THREE.TextureLoader();
     const textureMap = {
-      'EyeBase': '/new/EyeBaseTexture.webp',
-      'EyeMetallic': '/new/EyeMetallicTexture_png-EyeRoughnessTexture.webp',
-      'EyeNormal': '/new/EyeNormalMap.webp',
-      'RingsBase': '/new/RingsBaseTexture.webp',
-      'RingsMetallic': '/new/RingsMetallicTexture-RingsRoughnessTexture.webp',
-      'RingsNormal': '/new/RingsNormalMap.webp'
+      'EyeBase': `${WORKER_URL}/models/EyeBaseTexture.webp`,
+      'EyeMetallic': `${WORKER_URL}/models/EyeMetallicTexture_png-EyeRoughnessTexture.webp`,
+      'EyeNormal': `${WORKER_URL}/models/EyeNormalMap.webp`,
+      'RingsBase': `${WORKER_URL}/models/RingsBaseTexture.webp`,
+      'RingsMetallic': `${WORKER_URL}/models/RingsMetallicTexture-RingsRoughnessTexture.webp`,
+      'RingsNormal': `${WORKER_URL}/models/RingsNormalMap.webp`
     };
 
     // Enhanced debug logging
-    console.log('Model loaded:', gltf);
+    console.log('Model loaded:', model);
     console.log('Scene:', scene);
     console.log('Camera:', camera);
     
     // Log all meshes and their positions
-    gltf.scene.traverse((node) => {
+    model.scene.traverse((node) => {
       if (node.isMesh) {
         console.log('Mesh:', node.name, 'Position:', node.position);
         // Apply textures based on mesh name
@@ -118,7 +121,7 @@ export function OphanimModel() {
     });
 
     // Calculate bounding box to center model
-    const box = new THREE.Box3().setFromObject(gltf.scene);
+    const box = new THREE.Box3().setFromObject(model.scene);
     const center = box.getCenter(new THREE.Vector3());
     const size = box.getSize(new THREE.Vector3());
     
@@ -137,30 +140,34 @@ export function OphanimModel() {
     camera.updateProjectionMatrix();
 
     // Play animations
-    names.forEach((name) => {
-      const action = actions[name];
-      if (action) {
-        action.reset().play();
-        action.timeScale = 0.09;
-        action.setLoop(THREE.LoopRepeat, Infinity);
-      }
-    });
-
-    return () => {
+    if (names && actions) {
       names.forEach((name) => {
         const action = actions[name];
         if (action) {
-          action.stop();
+          action.reset().play();
+          action.timeScale = 0.09;
+          action.setLoop(THREE.LoopRepeat, Infinity);
         }
       });
+    }
+
+    return () => {
+      if (names && actions) {
+        names.forEach((name) => {
+          const action = actions[name];
+          if (action) {
+            action.stop();
+          }
+        });
+      }
     };
-  }, [gltf?.scene, scene, camera, actions, names]);
+  }, [model, scene, camera, actions, names]);
 
   if (error) {
     return <ErrorMessage error={error} />;
   }
 
-  if (!gltf?.scene) {
+  if (!model?.scene) {
     return null;
   }
 
@@ -179,7 +186,7 @@ export function OphanimModel() {
       <ambientLight intensity={0.3} />
       <primitive
         ref={groupRef}
-        object={gltf.scene}
+        object={model.scene}
         dispose={null}
       />
     </>
