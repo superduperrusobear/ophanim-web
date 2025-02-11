@@ -20,6 +20,7 @@
     "react-dom": "^18.2.0",
     "styled-components": "^6.1.15",
     "three": "^0.160.0",
+    "three-stdlib": "^2.35.13",
     "vanta": "^0.5.24"
   },
   "scripts": {

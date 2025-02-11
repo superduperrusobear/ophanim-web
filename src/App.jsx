@@ -6,6 +6,7 @@ import { UIOverlay } from './components/UIOverlay';
 import { SplashPage } from './components/SplashPage';
 import * as THREE from 'three';
 import { ShaderBackground } from './components/ShaderBackground';
+import { motion } from 'framer-motion';
 
 function WebGLError() {
   return (
@@ -52,80 +53,105 @@ function Loader() {
 }
 
 function ModelViewer() {
-  const [isLoading, setIsLoading] = useState(true);
-
   return (
     <div style={{ 
       width: '100vw', 
       height: '100vh',
       position: 'relative',
       overflow: 'hidden',
-      background: 'transparent'
+      background: 'black'
     }}>
-      <Canvas
-        camera={{ 
-          position: [-366.27, 58.40, -539.69],
-          fov: 45,
-          near: 0.1,
-          far: 1000
+      {/* Shader Background Base Layer */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        zIndex: 1,
+        opacity: 1,
+        mixBlendMode: 'normal'
+      }}>
+        <Canvas
+          camera={{
+            position: [0, 0, 1],
+            fov: 45
+          }}
+          gl={{
+            antialias: true,
+            alpha: false,
+            preserveDrawingBuffer: true
+          }}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            pointerEvents: 'none'
+          }}
+        >
+          <Suspense fallback={null}>
+            <ShaderBackground />
+          </Suspense>
+        </Canvas>
+      </div>
+
+      {/* Left Side GIF Layer */}
+      <motion.div
+        animate={{ 
+          opacity: [0.8, 1, 0.8]
         }}
-        gl={{
-          antialias: true,
-          powerPreference: 'high-performance',
-          alpha: false,
-          depth: true,
-          stencil: false,
-          logarithmicDepthBuffer: true
+        transition={{ 
+          duration: 4,
+          repeat: Infinity,
+          ease: "easeInOut"
         }}
-        shadows
-        dpr={Math.min(window.devicePixelRatio, 2)}
         style={{
           position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          zIndex: 1
-        }}
-        onCreated={({ gl, scene, camera }) => {
-          gl.setClearColor(0x000000, 1);
-          gl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-          scene.background = null;
-          setIsLoading(false);
-        }}
-      >
-        <ShaderBackground />
-        <Suspense fallback={<Loader />}>
-          <OphanimModel />
-        </Suspense>
-      </Canvas>
-
-      <UIOverlay />
-
-      {isLoading && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          pointerEvents: 'none',
+          top: '50%',
+          left: '18%',
+          transform: 'translateY(-50%)',
+          width: '1200px',
+          height: '1200px',
+          backgroundImage: 'url("/Untitled-3-Recovered.gif")',
+          backgroundPosition: 'center',
+          backgroundSize: 'contain',
+          backgroundRepeat: 'no-repeat',
           zIndex: 2,
-          background: 'transparent'
-        }}>
-          <div style={{
-            color: 'white',
-            background: 'rgba(0,0,0,0.8)',
-            padding: '20px',
-            borderRadius: '8px'
-          }}>
-            Initializing WebGL...
-          </div>
-        </div>
-      )}
+          mixBlendMode: 'normal',
+          opacity: 1
+        }}
+      />
+
+      {/* Animated Image Overlay */}
+      <motion.div
+        animate={{ 
+          scale: [1, 1.05, 1]
+        }}
+        transition={{ 
+          duration: 10,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+        style={{
+          position: 'absolute',
+          top: '-5%',
+          left: '-5%',
+          width: '110%',
+          height: '110%',
+          backgroundImage: 'url("/newbg.png")',
+          backgroundPosition: 'center center',
+          backgroundSize: 'cover',
+          backgroundRepeat: 'no-repeat',
+          zIndex: 3
+        }}
+      />
+
+      {/* UI Overlay */}
+      <div style={{ position: 'relative', zIndex: 5 }}>
+        <UIOverlay />
+      </div>
     </div>
   );
 }

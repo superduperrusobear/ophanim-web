@@ -106,14 +106,15 @@ export function UIOverlay() {
     width: '120px',
     height: '120px',
     transition: 'all 0.3s ease',
-    animation: 'breathe 4s ease-in-out infinite'
+    animation: 'breathe 4s ease-in-out infinite',
+    filter: 'drop-shadow(0 0 20px rgba(0, 0, 0, 0.8))'
   };
 
   const imgStyle = {
     width: '100%',
     height: '100%',
     objectFit: 'contain',
-    filter: 'drop-shadow(0 0 15px rgba(255, 255, 255, 0.4))'
+    filter: 'drop-shadow(0 0 20px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 10px rgba(0, 0, 0, 0.9))'
   };
 
   const containerStyle = {
@@ -133,17 +134,17 @@ export function UIOverlay() {
       0% {
         transform: scale(1);
         opacity: 0.8;
-        filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.3));
+        filter: drop-shadow(0 0 20px rgba(0, 0, 0, 0.8));
       }
       50% {
         transform: scale(1.15);
         opacity: 1;
-        filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.5));
+        filter: drop-shadow(0 0 35px rgba(0, 0, 0, 0.9));
       }
       100% {
         transform: scale(1);
         opacity: 0.8;
-        filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.3));
+        filter: drop-shadow(0 0 20px rgba(0, 0, 0, 0.8));
       }
     }
   `;

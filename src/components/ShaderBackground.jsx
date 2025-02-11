@@ -18,6 +18,7 @@ const BackgroundShaderMaterial = shaderMaterial(
   `,
   // Fragment shader
   `
+    precision highp float;
     uniform float time;
     uniform vec2 resolution;
     varying vec2 vUv;
@@ -64,33 +65,12 @@ const BackgroundShaderMaterial = shaderMaterial(
       vec2 st = uv*vec2(2,1);
       vec3 col = vec3(0);
       float bg = clouds(vec2(st.x+time*.5,-st.y));
-      uv *= 1.-.3*(sin(time*.2)*.5+.5);
       
-      // Base dark color for background
-      vec3 baseColor = vec3(0.0, 0.0, 0.0);
+      // Cream colored output (RGB: 245, 240, 230)
+      vec3 cream = vec3(0.96, 0.94, 0.90);
+      col = vec3(bg) * cream;
       
-      for (float i=1.; i<12.; i++) {
-        uv += .1*cos(i*vec2(.1+.01*i, .8)+i*i+time*.5+.1*uv.x);
-        vec2 p = uv;
-        float d = length(p);
-        
-        // White ethereal glow color
-        vec3 glowColor = vec3(1.0, 1.0, 1.0) * (cos(sin(i)*vec3(1,1,1))+1.);
-        col += .00125/d*glowColor;
-        
-        float b = noise(i+p+bg*1.731);
-        col += .002*b/length(max(p,vec2(b*p.x*.02,p.y)));
-        
-        // White cloud mix color
-        vec3 mixColor = vec3(bg*0.8);
-        col = mix(col, mixColor, d);
-      }
-      
-      // Final color adjustment
-      col = mix(col, baseColor, 0.1);
-      col = pow(col, vec3(0.9)); // Soften contrast for more ethereal look
-      
-      gl_FragColor = vec4(col, 1.0);
+      gl_FragColor = vec4(col * 0.85, 0.6);
     }
   `
 );
@@ -102,19 +82,22 @@ export function ShaderBackground() {
 
   useFrame((state) => {
     if (materialRef.current) {
-      materialRef.current.time = state.clock.elapsedTime * 0.3; // Even slower animation
-      materialRef.current.resolution.set(window.innerWidth, window.innerHeight);
+      materialRef.current.time = state.clock.elapsedTime * 0.5;
+      materialRef.current.resolution.set(
+        state.size.width * state.viewport.dpr,
+        state.size.height * state.viewport.dpr
+      );
     }
   });
 
   return (
-    <mesh position={[0, 0, -100]} renderOrder={-1000}>
-      <planeGeometry args={[200, 200]} />
+    <mesh>
+      <planeGeometry args={[2, 2]} />
       <backgroundShaderMaterial 
         ref={materialRef} 
-        transparent={false}
-        depthTest={false}
+        transparent={true}
         depthWrite={false}
+        depthTest={false}
       />
     </mesh>
   );

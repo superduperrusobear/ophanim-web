@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from 'react';
-import { useGLTF, useAnimations, PerspectiveCamera, OrbitControls } from '@react-three/drei';
+import { useGLTF, useAnimations, PerspectiveCamera, OrbitControls, useProgress, Html } from '@react-three/drei';
 import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
 
 // Model URLs - Update with your Cloudflare R2 bucket URL
 const R2_BASE_URL = process.env.REACT_APP_R2_URL || 'https://pub-[your-bucket-hash].r2.dev';
@@ -17,6 +18,45 @@ const MODEL_URLS = {
     'RingsNormal': `${R2_BASE_URL}/new/RingsNormalMap.webp`
   }
 };
+
+// Configure Draco
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/');
+dracoLoader.preload();
+
+// Loading component
+function Loader() {
+  const { progress } = useProgress();
+  return (
+    <div style={{
+      position: 'absolute',
+      top: '50%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+      color: '#ffd700',
+      fontSize: '1.2rem',
+      fontFamily: "'Cinzel', serif",
+      textAlign: 'center'
+    }}>
+      <div style={{
+        width: '200px',
+        height: '4px',
+        background: 'rgba(255, 215, 0, 0.2)',
+        borderRadius: '2px',
+        overflow: 'hidden',
+        marginBottom: '10px'
+      }}>
+        <div style={{
+          width: `${progress}%`,
+          height: '100%',
+          background: '#ffd700',
+          transition: 'width 0.3s ease'
+        }} />
+      </div>
+      {progress.toFixed(0)}% loaded
+    </div>
+  );
+}
 
 // Separate component for UI overlay
 export function UIOverlay() {
@@ -148,7 +188,9 @@ export function UIOverlay() {
 
 // Main 3D scene component
 export function OphanimModel() {
-  const gltf = useGLTF(MODEL_URLS.model);
+  const gltf = useGLTF(MODEL_URLS.model, loader => {
+    loader.setDRACOLoader(dracoLoader);
+  });
   const { actions, names } = useAnimations(gltf.animations, gltf.scene);
   const groupRef = useRef();
   const { scene, camera } = useThree();
